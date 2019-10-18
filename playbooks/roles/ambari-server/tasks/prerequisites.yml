@@ -1,0 +1,79 @@
+---
+- name: Ensure required packages are installed (yum)
+  become: yes
+  yum:
+    name: "{{ item }}"
+    update_cache: yes
+    state: installed
+  with_items:
+    - ambari-server
+    - gcc
+    - git
+    - gcc-c++
+    - mysql-connector-java
+    - make
+    - python-pip
+  when: ansible_os_family == "RedHat"
+
+- name: Ensure required packages are installed (apt)
+  become: yes
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: installed
+  with_items:
+    - ambari-server
+  when: ansible_os_family == "Debian"
+
+- name: Run Ambari Server setup
+  shell: /usr/sbin/ambari-server setup -s
+
+- name: Register ambari-server to /usr/lib/systemd
+  copy: src=ambari-server.service  dest=/usr/lib/systemd/system/ambari-server.service
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
+
+- name: Make sure ambari-server is running
+  service: name=ambari-server state=started enabled=yes
+
+- name: Waiting for ambari-server to start listening on port 8080
+  wait_for: host={{ansible_fqdn}} port=8080
+
+- name: pip httplib2
+  pip: name=httplib2
+
+- name: setup mysql-connector-java jars
+  shell: ambari-server setup --jdbc-db=mysql --jdbc-driver=/usr/share/java/mysql-connector-java.jar
+  when: install_ranger
+
+- name: Print debug
+  debug: msg="Calling http://{{ ansible_fqdn }}:8080/api/v1/hosts/{{ hostvars[item]['ansible_fqdn'] | lower }}"
+  with_items: "{{ groups['all-nodes'] }}"
+
+- name: Waiting for ambari-agents to register (Test)
+  uri: url="http://{{ ansible_fqdn }}:8080/api/v1/hosts/{{ hostvars[item]['ansible_fqdn'] | lower }}"
+       method=GET
+       force_basic_auth=yes
+       user=admin
+       password=admin
+       HEADER_X-Requested-By="ambari"
+       status_code=200,201,202,404
+  with_items: "{{ groups['all-nodes'] }}"
+  register: result
+  retries: 200
+  delay: 5
+
+- debug: msg="Response is {{result}}"
+
+- name: Waiting for ambari-agents to register
+  uri: url="http://{{ ansible_fqdn }}:8080/api/v1/hosts/{{ hostvars[item]['ansible_fqdn'] | lower }}"
+       method=GET
+       force_basic_auth=yes
+       user=admin
+       password=admin
+       HEADER_X-Requested-By="ambari"
+       status_code=200,201,202,404
+  with_items: "{{ groups['all-nodes'] }}"
+  register: result
+  until: "result.status != 404"
+  retries: 200
+  delay: 5

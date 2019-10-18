@@ -1,0 +1,46 @@
+---
+cluster_name: $cluster_name
+hdp_version: $hdp_version
+custom_repo: $custom_repo
+custom_repo_url: $custom_repo_url
+custom_repo_target: $custom_repo_target
+ambari_version: $ambari_version
+install_spark: $install_spark
+install_flume: $install_flume
+install_hbase: $install_hbase
+install_storm: $install_storm
+install_kafka: $install_kafka
+install_falcon: $install_falcon
+install_ranger: $install_ranger
+install_logsearch: $install_logsearch
+admin_password: $admin_password
+services_password: $services_password
+
+alerts_contact: 'root@localhost.localdomain'
+
+custom_ranger: false
+custom_blueprint: false
+
+# set to true to show host variables
+debug: $debug
+
+ambari_repo_file: $ambari_repo_file
+ambari_repo: "http://s3.amazonaws.com/dev.hortonworks.com/ambari/centos6/2.x/updates/{{ ambari_version }}/ambari.repo"
+
+is_kerberos: $is_kerberos
+user_has_permission: $user_has_permission
+password1: $password1
+user_doesnot_have_permission: $user_doesnot_have_permission
+password2: $password2
+create_hdfs_dir: $create_hdfs_dir
+hbase_schema_file: $hbase_schema_file
+hbase_table_query: $hbase_table_query
+hive_server_host: $hive_server_host
+hive_create_table_query: $hive_create_table_query
+yarn_queue: $yarn_queue
+knox_server_host: $knox_server_host
+storm_topology_name: $storm_topology_name
+kafka_topic_name: $kafka_topic_name
+
+hadoop_mapreduce_jar_url: $hadoop_mapreduce_jar_url
+hadoop_mapreduce_jar_path: /var/hadoop-mapreduce-examples-2.2.0.jar

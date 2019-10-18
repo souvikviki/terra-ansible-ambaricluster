@@ -1,0 +1,16 @@
+[master-nodes]
+master01 ansible_host=13.233.16.164
+
+[slave-nodes]
+slave01 ansible_host=13.233.0.58
+slave02 ansible_host=13.234.202.250
+
+[ranger-nodes]
+
+[all-nodes:children]
+master-nodes
+slave-nodes
+
+[all-nodes:vars]
+ansible_user=centos
+ansible_ssh_private_key_file=/home/souvik/Desktop/jenkins-server.pem

@@ -1,0 +1,247 @@
+{
+  "configurations" : [
+    {% if install_ranger == true -%}
+    {
+      "admin-properties": {
+        "db_root_password": "vagrant",
+        "db_password": "rangeradmin",
+        "db_root_user": "root",
+        "DB_FLAVOR": "MYSQL",
+        "db_user": "rangeradmin",
+        "db_name": "rangeradmin",
+        "db_host": "{{ hostvars[groups['master-nodes'][0]]['ansible_fqdn'] }}"
+      }
+    },
+    {
+      "ranger-env": {
+        "ranger_admin_password": "rangerpassword",
+        "is_solrCloud_enabled" : "true",
+    {% if install_hbase == true -%}
+        "ranger-hbase-plugin-enabled" : "Yes",
+    {% endif -%}
+    {% if install_storm == true -%}
+        "ranger-storm-plugin-enabled" : "Yes",
+    {% endif -%}
+    {% if install_kafka == true -%}
+        "ranger-kafka-plugin-enabled" : "Yes",
+    {% endif -%}
+        "ranger-hdfs-plugin-enabled" : "Yes",
+        "ranger-yarn-plugin-enabled" : "Yes",
+        "ranger-hive-plugin-enabled" : "Yes",
+        "ranger-knox-plugin-enabled" : "Yes"
+      }
+    },
+    {
+      "ranger-admin-site": {
+        "ranger.audit.source.type": "solr",
+        "ranger.audit.solr.urls": "http://{{ hostvars[groups['master-nodes'][0]]['ansible_fqdn'] }}:6083/solr/ranger_audits"
+      }
+    }
+    {% endif -%}
+  ],
+  "host_groups" : [
+    {
+      "name" : "slavenode_1",
+      "configurations" : [ ],
+      "components" : [
+        {
+          "name": "ZOOKEEPER_SERVER"
+        },
+        {
+          "name" : "ZOOKEEPER_CLIENT"
+        },
+        {
+          "name" : "PIG"
+        },
+        {
+          "name" : "HIVE_SERVER"
+        },
+        {
+          "name" : "HIVE_METASTORE"
+        },
+        {
+          "name" : "WEBHCAT_SERVER"
+        },
+        {
+          "name" : "MYSQL_SERVER"
+        },
+        {
+          "name" : "HIVE_CLIENT"
+        },
+        {
+          "name" : "HDFS_CLIENT"
+        },
+        {
+          "name" : "YARN_CLIENT"
+        },
+        {
+          "name" : "HCAT"
+        },
+        {
+          "name" : "MAPREDUCE2_CLIENT"
+        },
+        {
+          "name" : "TEZ_CLIENT"
+        },
+        {
+          "name" : "SLIDER"
+        },
+        {
+          "name" : "INFRA_SOLR"
+        },
+        {
+          "name" : "INFRA_SOLR_CLIENT"
+        },
+        {% if install_spark == true -%}
+        {
+          "name" : "SPARK_CLIENT"
+        },
+        {% endif -%}
+        {% if install_hbase == true -%}
+        {
+          "name" : "HBASE_CLIENT"
+        },
+        {% endif -%}
+        {% if install_storm == true -%}
+        {
+          "name" : "SUPERVISOR"
+        },
+        {
+          "name" : "STORM_UI_SERVER"
+        },
+        {
+          "name" : "DRPC_SERVER"
+        },
+        {
+          "name" : "NIMBUS"
+        },
+        {% endif -%}
+        {
+          "name" : "NODEMANAGER"
+        },
+        {
+          "name" : "APP_TIMELINE_SERVER"
+        },
+        {
+          "name" : "RESOURCEMANAGER"
+        }
+      ],
+      "cardinality" : "1"
+    },
+    {
+      "name" : "slavenode_2",
+      "configurations" : [ ],
+      "components" : [
+        {
+          "name" : "DATANODE"
+        },
+        {% if install_hbase == true -%}
+        {
+          "name" : "HBASE_REGIONSERVER"
+        },
+        {% endif -%}
+        {
+          "name" : "HISTORYSERVER"
+        },
+        {
+          "name" : "SECONDARY_NAMENODE"
+        },
+        {
+          "name" : "SQOOP"
+        },
+        {
+          "name" : "HIVE_CLIENT"
+        },
+        {
+          "name" : "HDFS_CLIENT"
+        },
+        {
+          "name" : "YARN_CLIENT"
+        },
+        {
+          "name": "ZOOKEEPER_SERVER"
+        },
+        {
+          "name" : "ZOOKEEPER_CLIENT"
+        }
+      ],
+      "cardinality" : "1"
+    },
+    {
+      "name" : "masternode_1",
+      "configurations" : [ ],
+      "components" : [
+        {
+          "name" : "ZOOKEEPER_SERVER"
+        },
+        {
+          "name" : "ZOOKEEPER_CLIENT"
+        },
+        {
+          "name" : "HIVE_CLIENT"
+        },
+        {
+          "name" : "HDFS_CLIENT"
+        },
+        {
+          "name" : "YARN_CLIENT"
+        },
+        {
+          "name" : "MAPREDUCE2_CLIENT"
+        },
+        {
+          "name" : "TEZ_CLIENT"
+        },
+        {
+          "name" : "AMBARI_SERVER"
+        },
+        {
+          "name" : "METRICS_COLLECTOR"
+        },
+        {
+          "name" : "NAMENODE"
+        },
+        {% if install_spark == true -%}
+        {
+          "name" : "SPARK_JOBHISTORYSERVER"
+        },
+        {
+          "name" : "SPARK_CLIENT"
+        },
+        {% endif -%}
+        {% if install_hbase == true -%}
+        {
+          "name" : "HBASE_CLIENT"
+        },
+        {
+          "name" : "HBASE_MASTER"
+        },
+        {% endif -%}
+        {% if install_kafka == true -%}
+        {
+          "name" : "KAFKA_BROKER"
+        },
+        {% endif -%}
+        {% if install_ranger == true -%}
+        {
+          "name": "RANGER_ADMIN"
+        },
+        {
+          "name": "RANGER_USERSYNC"
+        },
+        {
+          "name": "RANGER_TAGSYNC"
+        },
+        {% endif -%}
+        {
+          "name" : "METRICS_MONITOR"
+        }
+      ],
+      "cardinality" : "1"
+    }
+  ],
+  "Blueprints" : {
+    "stack_name" : "HDP",
+    "stack_version" : "{{ hdp_version }}"
+  }
+}

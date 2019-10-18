@@ -1,0 +1,19 @@
+mysql_root_password: vagrant
+mysql_root_password_update: yes
+overwrite_global_mycnf: yes
+mysql_databases:
+  - name: ranger
+  - name: ranger_audit
+mysql_users:
+#  - name: root
+#    host: "%"
+#    password: vagrant
+#    priv: "*.*:ALL,GRANT"
+  - name: rangeradmin
+    host: "%"
+    password: rangeradmin
+    priv: "*.*:ALL,GRANT"
+  - name: rangerlogger
+    host: "%"
+    password: rangerlogger
+    priv: "*.*:ALL,GRANT"

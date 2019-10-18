@@ -1,0 +1,33 @@
+{
+  "blueprint" : "cluster_blueprint",
+  "default_password" : "{{ services_password }}",
+  "config_recommendation_strategy": "ALWAYS_APPLY_DONT_OVERRIDE_CUSTOM_VALUES",
+  "host_groups" :[
+    {
+      "name" : "slavenode_1",
+      "hosts" : [
+        {
+          "fqdn" : "{{ hostvars[groups['slave-nodes'][0]]['ansible_fqdn'] | lower }}"
+        }
+      ]
+    },
+    {
+      "name" : "slavenode_2",
+      "hosts" : [
+        {
+          "fqdn" : "{{ hostvars[groups['slave-nodes'][1]]['ansible_fqdn'] | lower }}"
+        }
+      ]
+    },
+    {
+      "name" : "masternode_1",
+      "hosts" : [
+        {
+          "fqdn" : "{{ hostvars[groups['master-nodes'][0]]['ansible_fqdn'] | lower }}"
+        }
+      ]
+    }
+  ],
+  "Clusters" : {"cluster_name":"cl1"}
+
+}

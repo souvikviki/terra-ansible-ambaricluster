@@ -1,0 +1,6 @@
+---
+- name: "Apply the plugin enforcement role to all nodes"
+  hosts: all-nodes
+  any_errors_fatal: true
+  roles:
+    - plugin_enforcement

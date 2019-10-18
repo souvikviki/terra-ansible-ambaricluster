@@ -1,0 +1,7 @@
+---
+- name: Upload three-node blueprint json
+  template: src=blueprint-three-node.j2 dest=/tmp/cluster_blueprint mode=0644
+  when: groups['master-nodes']|length == 1
+
+- name: Upload three-node cluster json
+  template: src=cluster-three-node.j2 dest=/tmp/cluster_template mode=0644

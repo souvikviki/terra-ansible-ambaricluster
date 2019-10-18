@@ -1,0 +1,40 @@
+{
+  "blueprint" : "cluster_blueprint",
+  "default_password" : "{{ services_password }}",
+  "host_groups" :[
+    {% if groups['slave-nodes']|length > 0 -%}
+    {
+      "name" : "slavenode_simple",
+      "hosts" : [{% for node in groups['slave-nodes']|sort %}
+
+        {
+          "fqdn" : "{{ hostvars[node]['ansible_fqdn'] | lower }}"
+        }{% if not loop.last %},{% endif %}
+{% endfor %}
+
+      ]
+    },
+    {% endif -%}
+    {% if 'edge-nodes' in groups and groups['edge-nodes']|length > 0 -%}
+    {
+      "name" : "edgenode",
+      "hosts" : [{% for node in groups['edge-nodes']|sort %}
+
+        {
+          "fqdn" : "{{ hostvars[node]['ansible_fqdn'] | lower }}"
+        }{% if not loop.last %},{% endif %}
+{% endfor %}
+
+      ]
+    },
+    {% endif -%}
+    {
+      "name" : "masternode_1",
+      "hosts" : [
+        {
+          "fqdn" : "{{ hostvars[groups['master-nodes']|sort|first]['ansible_fqdn'] | lower }}"
+        }
+      ]
+    }
+  ]
+}

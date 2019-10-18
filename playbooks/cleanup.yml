@@ -1,0 +1,6 @@
+---
+- name: "Apply the cleanup role to all nodes"
+  hosts: all-nodes
+  any_errors_fatal: true
+  roles:
+    - cleanup-hosts

@@ -1,0 +1,43 @@
+---
+- name: "Add nodes to required groups"
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: "Add the last masternode to ranger-node variable group"
+      always_run: yes
+      add_host:
+        name: "{{ hostvars[item].inventory_hostname }}"
+        ansible_host: "{{ hostvars[item].ansible_host|default(hostvars[item].ansible_ssh_host) }}"
+        ansible_user: "{{ hostvars[item].ansible_user|default('root') }}"
+        ansible_ssh_pass: "{{ hostvars[item].ansible_ssh_pass|default('') }}"
+        ansible_become_user: root
+        ansible_become_pass: "{{ hostvars[item].ansible_ssh_pass|default('') }}"
+        groups: ranger-node
+      with_items: "{{ groups['master-nodes']|sort|last }}"
+
+- name: "Show debug info"
+  hosts: ranger-node
+  tasks:
+    - name: "Show ranger-node info"
+      debug: var=hostvars[inventory_hostname]
+      when: debug
+
+
+- name: "Apply the mysql role to ranger nodes"
+  hosts: ranger-node
+  vars_files:
+    - group_vars/rangerdb.yml
+  roles:
+    - { role: geerlingguy.mysql }
+
+
+#- name: "Apply the ranger role to ranger nodes"
+#  hosts: ranger-node
+#  any_errors_fatal: true
+#  become: yes
+#  roles:
+#    - ranger
+#  tags:
+#    - ranger-only
+#

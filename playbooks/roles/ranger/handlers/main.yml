@@ -1,0 +1,5 @@
+---
+- name: restart ranger admin
+  service: name=ranger-admin state=restarted
+  when: ranger_install
+

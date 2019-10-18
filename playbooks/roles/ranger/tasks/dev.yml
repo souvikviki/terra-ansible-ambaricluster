@@ -1,0 +1,92 @@
+---
+- name: Install dependencies for building Ranger
+  yum: name={{ item }} state=installed
+  with_items:
+    - gcc
+    - git
+    - gcc-c++
+    - mysql-connector-java
+    - make
+    - python-pip
+  when: ansible_os_family == "RedHat"
+
+- name: Get apache-maven-3.0.5
+  get_url: url={{maven_url}} mode=0440 dest=/tmp
+
+- name: Unarchive maven
+  unarchive: src=/tmp/apache-maven-3.2.1-bin.tar.gz dest=/tmp copy=no
+
+- name: Put maven to proper place
+  command: creates="/usr/share/maven" mv /tmp/apache-maven-3.2.1 /usr/share/maven
+
+- name: Upload maven.sh File
+  template: src=maven.sh.j2 dest=/etc/profile.d/maven.sh mode=0644
+
+- name: Set mvn link
+  action: command update-alternatives --install /usr/bin/mvn mvn /usr/share/maven/bin/mvn 1
+
+- name: Checkout repo
+  git: repo={{ranger.repo}}
+       dest={{ranger.src_dir}}
+       version={{ranger.branch}}
+
+#- shell: ls -1  {{ranger.patches_dir}}
+#  register: contents
+#
+#- file: path={{ranger.patches_dir}}/{{ item }} state=absent
+#  with_items: contents.stdout_lines
+
+- name: Empty patches dir
+  shell: mkdir -p {{ranger.patches_dir}} && rm -f {{ranger.patches_dir}}/*.patch
+
+- name: Copy patches
+  copy: src="{{ item }}" dest="{{ranger.patches_dir}}"
+  with_fileglob:
+       - "./data/patches/*.patch"
+  when: "{{ ranger.apply_patches }}"
+
+- name: Check if any patch needs to be applied
+  shell: find {{ranger.patches_dir}} -name '*.patch' -type f | wc -l | tr -d '[[:space:]]'
+  register: patches_available
+  when: "{{ ranger.apply_patches }}"
+
+- name: Debug patches_available var
+  debug: msg="Patches_available is {{ patches_available }}"
+
+- name: Apply patches
+  shell: for i in {{ranger.patches_dir}}/*.patch; do git apply $i; done chdir={{ ranger.src_dir }}
+  when :  patches_available.stdout == 0
+
+- name: Build Ranger Admin
+  shell: mvn clean compile package assembly:assembly chdir={{ranger.src_dir}}
+  environment:
+    JAVA_HOME: /usr/lib/jvm/jre-1.7.0-openjdk.x86_64
+
+- name: Create ranger user
+  user: name={{ranger_user}}
+
+- name: Create ranger group
+  group: name={{ranger_group}} state=present
+
+- name: Create {{ranger.build_dir}} directory
+  file: path={{ranger.build_dir}} state=directory group="ranger" owner="ranger"
+
+- name: Unzip ranger to {{ranger.build_dir}}
+  unarchive: src="{{ranger.src_dir}}/target/ranger-{{ranger.ranger_ver}}-SNAPSHOT-admin.tar.gz" dest={{ranger.build_dir}} copy=no
+
+- name: Copy install.properties
+  template: src=ranger.install.properties.j2 dest={{ranger.build_dir}}/{{ranger.dir_name}}/install.properties mode=0644
+
+- name: Run Ranger Admin setup
+  shell: sh ./setup.sh chdir={{ranger.build_dir}}/{{ranger.dir_name}}
+  environment:
+    JAVA_HOME: /usr/lib/jvm/jre-1.7.0-openjdk.x86_64
+
+- name: Run set_globals.sh
+  shell: sh ./set_globals.sh chdir={{ranger.build_dir}}/{{ranger.dir_name}}
+  environment:
+    JAVA_HOME: /usr/lib/jvm/jre-1.7.0-openjdk.x86_64
+
+- name: Start Ranger Admin
+  command: "/usr/bin/ranger-admin start"
+  become_user: ranger

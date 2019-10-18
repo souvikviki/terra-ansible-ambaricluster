@@ -1,0 +1,77 @@
+---
+- name: "Show debug info"
+  hosts: all-nodes
+  tasks:
+    - name: "Show all-nodes info"
+      debug: var=hostvars[inventory_hostname]
+      when: debug
+
+- name: "Apply the ambari-agent role to all nodes"
+  hosts: all-nodes
+  any_errors_fatal: true
+  roles:
+    - ambari-agent
+  tags:
+    - ambari-agent-only
+
+
+- name: "Apply the mysql role to master nodes"
+  hosts: master-nodes
+  vars_files:
+    - group_vars/rangerdb.yml
+  become: yes
+  pre_tasks:
+  - name: Add MySQL 5.6 Server repository
+    yum: name=http://dev.mysql.com/get/mysql-community-release-el6-5.noarch.rpm state=present
+  - name: Uninstall the existing libaio package, since it conflicts with MySQL 5.6
+    yum:
+      name: libaio
+      update_cache: yes
+      state: absent
+
+  roles:
+  - geerlingguy.mysql
+
+- name: Allow root remote access
+  hosts: master-nodes
+  vars_files:
+    - group_vars/rangerdb.yml
+  tasks:
+    - name: Allow root login remotely (that is disabled by geerlingguy/ansible-role-mysql)
+      command: 'mysql -NB -u root -p{{ mysql_root_password }} -h localhost -e "{{ item }}"'
+      with_items:
+        - CREATE USER 'root'@'%' IDENTIFIED BY '{{ mysql_root_password }}'; GRANT ALL ON *.* TO 'root'@'%'; flush privileges;
+        - GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+
+
+ #- name: Install the MySQL Community Edition repository
+ #  shell: rpm -Uvh https://dev.mysql.com/get/mysql57-community-release-el7-7.noarch.rpm
+ #  args:
+ #    creates: /etc/yum.repos.d/mysql-community.repo
+
+
+#- name: "Apply the mysql role to ambari nodes"
+#  hosts: master-nodes
+#  vars_files:
+#    - group_vars/rangerdb.yml
+#  roles:
+#    - { role: geerlingguy.mysql }
+
+
+- name: "Apply the ranger role to ambari nodes"
+  hosts: master-nodes
+  become: yes
+  any_errors_fatal: true
+  roles:
+    - ranger
+  tags:
+    - ranger-only
+
+
+- name: "Apply the ambari-server role to ambari-node group"
+  hosts: master-nodes
+  become: yes
+  roles:
+    - ambari-server
+  tags:
+   - ambari-server-only

@@ -1,0 +1,27 @@
+---
+- name: Load OS specific variables
+  include_vars: ../../../group_vars/all
+
+- name: Download the Ambari repo
+  become: yes 
+  get_url: url={{ ambari_repo }} dest={{ ambari_repo_file }}
+
+- name: Ensure required packages are installed (yum)
+  become: yes
+  yum:
+    name: "{{ item }}"
+    update_cache: yes
+    state: installed
+  with_items:
+    - ambari-agent
+
+- name: Configure the Ambari agent
+  become: yes
+  lineinfile: dest=/etc/ambari-agent/conf/ambari-agent.ini
+              regexp='^hostname='
+              line='hostname={{ hostvars[groups['master-nodes'][0]]['ansible_fqdn'] }}'
+              state=present
+
+- name: Make sure ambari-agent is running
+  become: yes
+  service: name=ambari-agent state=started enabled=yes
